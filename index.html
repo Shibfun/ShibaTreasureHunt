@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shiba Treasure Hunt</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #f5e6d3, #ffffff);
+            color: #4a2c0b;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        /* Main content */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            text-shadow: 2px 2px #ffcc00;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+        #score, #time {
+            font-size: 1.5rem;
+            margin: 0.5rem;
+            color: #4a2c0b;
+            text-shadow: 1px 1px #ffcc00;
+        }
+        #start-btn, #replay-btn {
+            font-size: 1.2rem;
+            padding: 0.5rem 1rem;
+            background-color: #ffcc00;
+            border: 2px solid #4a2c0b;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        #start-btn:disabled, #replay-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #game-container {
+            position: relative;
+            width: 90vw;
+            max-width: 800px;
+            height: 60vh;
+            max-height: 500px;
+            border: 3px solid #4a2c0b;
+            background: url('https://i.imgur.com/7Xz8y9M.png') no-repeat center/cover;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 0.5rem auto;
+        }
+        #shiba {
+            position: absolute;
+            width: 8vw;
+            max-width: 60px;
+            height: 8vw;
+            max-height: 60px;
+            background: url('https://i.imgur.com/Q0Q3X5q.png') no-repeat center/contain;
+            transition: all 0.1s ease;
+        }
+        .token {
+            position: absolute;
+            width: 6vw;
+            max-width: 50px;
+            height: 6vw;
+            max-height: 50px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .token:hover {
+            transform: scale(1.2);
+        }
+        /* Footer */
+        footer {
+            font-size: 0.9rem;
+            color: #4a2c0b;
+            text-align: center;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        footer a {
+            color: #4a2c0b;
+            text-decoration: none;
+        }
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            #score, #time {
+                font-size: 1.2rem;
+            }
+            #start-btn, #replay-btn {
+                font-size: 1rem;
+                padding: 0.4rem 0.8rem;
+            }
+            #game-container {
+                height: 50vh;
+                max-height: 400px;
+            }
+            #shiba {
+                width: 10vw;
+                max-width: 40px;
+                height: 10vw;
+                max-height: 40px;
+            }
+            .token {
+                width: 8vw;
+                max-width: 40px;
+                height: 8vw;
+                max-height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Shiba Treasure Hunt</h1>
+        <div id="score">Score: 0</div>
+        <div id="time">Time: 60</div>
+        <button id="start-btn" onclick="startGame()">Start Game</button>
+        <button id="replay-btn" onclick="startGame()" style="display:none">Replay</button>
+        <div id="game-container">
+            <div id="shiba"></div>
+        </div>
+    </div>
+    <footer>
+        Token icons are sourced from <a href="https://woofswap.finance" target="_blank">WoofSwap</a>. 
+        All rights reserved by WoofSwap and the Shiba Inu ecosystem.
+    </footer>
+
+    <script>
+        // Game variables
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        const shiba = document.getElementById('shiba');
+        const scoreDisplay = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+        const gameContainer = document.getElementById('game-container');
+        const startBtn = document.getElementById('start-btn');
+        const replayBtn = document.getElementById('replay-btn');
+
+        // Token icons and their scores
+        const tokens = [
+            { url: 'https://woofswap.finance/image/tokens/SHIB.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/BONE.png', score: 20 },
+            { url: 'https://woofswap.finance/image/tokens/LEASH.png', score: 50 },
+            { url: 'https://woofswap.finance/image/tokens/treat.png', score: 15 },
+            { url: 'https://woofswap.finance/image/tokens/DAMN.png', score: 5 },
+            { url: 'https://woofswap.finance/image/tokens/feed.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/WOOF.png', score: 30 },
+            { url: 'https://woofswap.finance/image/tokens/ChikaLogo.png', score: 15 },
+            { url: 'https://woofswap.finance/image/tokens/wow.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/shipa.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/luisa.png', score: 15 },
+            { url: 'https://woofswap.finance/image/tokens/none.png', score: 5 },
+            { url: 'https://woofswap.finance/image/tokens/guy.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/neko.png', score: 15 },
+            { url: 'https://woofswap.finance/image/tokens/shibss.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/toys.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/Usagi.png', score: 20 },
+            { url: 'https://woofswap.finance/image/tokens/CANNED.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/dudu.png', score: 10 },
+            { url: 'https://woofswap.finance/image/tokens/msga.png', score: 15 },
+            { url: 'https://woofswap.finance/image/tokens/PIKA.png', score: 20 }
+        ];
+
+        // Move Shiba with mouse
+        gameContainer.addEventListener('mousemove', (e) => {
+            if (gameActive) {
+                const rect = gameContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left - shiba.clientWidth / 2;
+                const y = e.clientY - rect.top - shiba.clientHeight / 2;
+                shiba.style.left = Math.max(0, Math.min(x, gameContainer.clientWidth - shiba.clientWidth)) + 'px';
+                shiba.style.top = Math.max(0, Math.min(y, gameContainer.clientHeight - shiba.clientHeight)) + 'px';
+            }
+        });
+
+        // Touch support for mobile
+        gameContainer.addEventListener('touchmove', (e) => {
+            if (gameActive) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = gameContainer.getBoundingClientRect();
+                const x = touch.clientX - rect.left - shiba.clientWidth / 2;
+                const y = touch.clientY - rect.top - shiba.clientHeight / 2;
+                shiba.style.left = Math.max(0, Math.min(x, gameContainer.clientWidth - shiba.clientWidth)) + 'px';
+                shiba.style.top = Math.max(0, Math.min(y, gameContainer.clientHeight - shiba.clientHeight)) + 'px';
+            }
+        }, { passive: false });
+
+        // Spawn tokens randomly
+        function spawnToken() {
+            if (!gameActive) return;
+            const tokenData = tokens[Math.floor(Math.random() * tokens.length)];
+            const token = document.createElement('img');
+            token.className = 'token';
+            token.src = tokenData.url;
+            token.dataset.score = tokenData.score;
+
+            const maxX = gameContainer.clientWidth - 50;
+            const maxY = gameContainer.clientHeight - 50;
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            token.style.left = newX + 'px';
+            token.style.top = newY + 'px';
+
+            token.onclick = () => {
+                if (gameActive) {
+                    score += parseInt(token.dataset.score);
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    token.style.transform = 'scale(0)';
+                    setTimeout(() => token.remove(), 300);
+                }
+            };
+
+            gameContainer.appendChild(token);
+            setTimeout(() => {
+                if (token.parentNode) token.remove();
+            }, 3000);
+        }
+
+        // Start the game
+        function startGame() {
+            if (gameActive) return;
+            gameActive = true;
+            score = 0;
+            timeLeft = 60;
+            scoreDisplay.textContent = `Score: ${score}`;
+            timeDisplay.textContent = `Time: ${timeLeft}`;
+            startBtn.style.display = 'none';
+            replayBtn.style.display = 'none';
+            shiba.style.display = 'block';
+
+            const tokenInterval = setInterval(spawnToken, 500);
+
+            const timer = setInterval(() => {
+                timeLeft--;
+                timeDisplay.textContent = `Time: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    clearInterval(tokenInterval);
+                    gameActive = false;
+                    shiba.style.display = 'none';
+                    alert(`Game Over! Your score: ${score}`);
+                    replayBtn.style.display = 'inline-block';
+                    document.querySelectorAll('.token').forEach(token => token.remove());
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
